@@ -98,11 +98,26 @@ createUser({
     displayname: "bigbank",
     username: "takebank"
 })
+async function createToDo({priority, task, status}){
 
+console.log("You have work to do");
+    const taskForUser = await db.one(`
+    insert into todos
+        (priority, task, status)
+    values($1, $2, $3)
 
+    returning id
+        
+    `,[priority, task, status]);
+    
+    console.log(taskForUser);
+
+    return taskForUser;
+}
 // 3. Serve.
 module.exports = {
-    getAll,
+    getAll,    
     getOne,
-    createUser
+    createUser,
+    createToDo
 };

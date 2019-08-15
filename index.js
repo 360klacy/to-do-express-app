@@ -49,19 +49,24 @@ app.get('/users/:userId', async (req, res) => {
 
 app.post('/users', async (req, res) => {
     console.log("WE got a POST request");
+    const newUserInfo = await user.createUser(req.body)
     // .send() is different from .end()
-    res.send("Atta Baby!");
+    res.json(newUserInfo);
 
     console.log("GOt body here")
     console.log(req.body);
 
-    const newUserInfo = await user.createUser({
-        displayname: "bigbank",
-        username: "takebank"
-    });
+    //     displayname: req.body.displayname,
+    //     username: req.body.username
+    // });
 });
 
 app.listen(port, () => console.log(`The server is listeneing on Port: ${port}`))
+
+app.post('/users/:userId/todo', async(req, res) => {
+    const newToDo = await user.createToDo(req.body)
+    res.json(newToDo);
+})
 
 
 // const server = http.createServer((req, res) => {
