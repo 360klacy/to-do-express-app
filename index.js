@@ -1,16 +1,98 @@
 const express = require('express');
-const app = express();  
+const { sanitizeBody } = require('express-validator');
 
+const es6Renderer = require('express-es6-template-engine');
+
+const app = express();  
 // Use the urlencoded middleware
 // to read Post bodies
 
+app.engine('html', es6Renderer);
+app.set('views', 'views');
+app.set('view engine', 'html');
+
+// "static assets" like css,js, and images
+// will go in a directory named "public"
+app.use(express.static('public'));
+
 app.use(express.urlencoded({extended: true}));    
+
+app.use((req, res, next) => {
+    console.log("I am middleware.yay.");
+    console.log(req.url);
+    // res.send("sorry");
+    next();
+})
 
 
 const Todo = require('./Todo');
 const user = require('./user');
 // Create a variable for the port
 const port = 3000;
+
+app.get('/', (req, res) => {
+    res.render('index', {
+        locals: {
+            message: "Something!"
+        },
+        partials: {
+            navbar: './navbar',
+            includes: 'includes'
+        } 
+    });
+})
+
+app.get('/profile', (req, res) => {
+    res.render('profile', {
+        locals: {
+
+        },
+        partials:{
+            navbar: 'navbar',
+            includes: 'includes'
+        }
+    })
+})
+
+app.get('/profile/todolist', async (req, res) => {
+    const userId = 1;   //using hard code id for now
+    const theUser = await user.getOne(userId);
+    res.render('todolist', {
+        locals: {
+            todos: theUser.todos
+        },
+        partials:{
+            navbar: 'navbar',
+            includes: 'includes'
+        }
+    })
+});
+
+// 1. Allow the user to GET the form for creating a todo
+app.get('/profile/todolist/create', (req, res) => {
+    // Render the "create new todo" form template
+    res.render('create-todo', {
+        partials: {
+            navbar: 'navbar',
+            includes: 'includes'
+        }
+    })
+});
+
+
+// 2. Process the body of the form they POST
+app.post('/profile/todolist/create',[
+    sanitizeBody('task').escape(),
+], async (req, res) => {
+    // Handle the req.body from the "create new todo" form
+    console.log(req.body);
+
+    // normally, we dont include the user id in the form.
+    // When you log into a site, it keeps track of your
+    // id for you
+    const taskId = await user.createToDo(1, req.body.task);
+    res.send(taskId);
+});
 
 app.get('/',(req, res) => res.send('Hello World'))
 
@@ -47,7 +129,10 @@ app.get('/users/:userId', async (req, res) => {
     res.json(aUser);
 });
 
-app.post('/users', async (req, res) => {
+app.post('/users', [
+    sanitizeBody('username').escape(),
+    sanitizeBody('displayname').escape()
+], async (req, res) => {
     console.log("WE got a POST request");
     const newUserInfo = await user.createUser(req.body)
     // .send() is different from .end()

@@ -98,17 +98,17 @@ createUser({
     displayname: "bigbank",
     username: "takebank"
 })
-async function createToDo({priority, task, status}){
+async function createToDo(priority, task){
 
 console.log("You have work to do");
     const taskForUser = await db.one(`
     insert into todos
-        (priority, task, status)
-    values($1, $2, $3)
+        (priority, task)
+    values($1, $2)
 
     returning id
         
-    `,[priority, task, status]);
+    `,[priority, task]);
     
     console.log(taskForUser);
 
